@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Gerenciamento de Bots</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .dashboard {
+            flex: 3;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .dashboard h1 {
+            text-align: center;
+            color: #333;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .stat h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .stat p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        .resources-widget {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .resources-widget h2 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            color: #fff;
+        }
+        .resource-item {
+            margin-bottom: 15px;
+        }
+        .resource-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #999;
+        }
+        .resource-bar {
+            width: 100%;
+            height: 20px;
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .resource-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+        }
+        .resource-fill.healthy {
+            background: #00ff88;
+        }
+        .resource-fill.warning {
+            background: #ffff00;
+        }
+        .resource-fill.critical {
+            background: #ff0044;
+            color: #fff;
+        }
+        .resource-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .resource-detail {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .resource-detail strong {
+            color: #00ff88;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .action-buttons a {
+            display: inline-block;
+            padding: 12px 30px;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .action-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .btn-manage {
+            background: #2196F3;
+        }
+        .btn-manage:hover {
+            background: #1976D2;
+        }
+        .btn-view {
+            background: #4CAF50;
+        }
+        .btn-view:hover {
+            background: #388E3C;
+        }
+        .terminal {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+        }
+        .terminal-header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .terminal-body {
+            flex: 1;
+            background: #000;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .terminal-body p {
+            margin: 0;
+            font-family: monospace;
+        }
+        .terminal-input {
+            display: flex;
+        }
+        .terminal-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+        }
+        .terminal-input button {
+            padding: 10px;
+            background: #28a745;
+            border: none;
+            color: white;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        .terminal-input button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Painel de Gerenciamento de Bots</h1>
+        <div class="stats">
+            <div class="stat">
+                <h2 id="botsActive">0</h2>
+                <p>Bots Ativos</p>
+            </div>
+            <div class="stat">
+                <h2 id="usersCount">0</h2>
+                <p>Usuários</p>
+            </div>
+            <div class="stat">
+                <h2 id="salesCount">0</h2>
+                <p>Vendas</p>
+            </div>
+        </div>
+        
+        <div class="resources-widget">
+            <h2>📊 Recursos do Sistema</h2>
+            
+            <div class="resource-item">
+                <div class="resource-label">
+                    <span>CPU</span>
+                    <span id="cpu-percent">0%</span>
+                </div>
+                <div class="resource-bar">
+                    <div id="cpu-bar" class="resource-fill healthy" style="width: 0%">
+                        <span id="cpu-text">0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="resource-item">
+                <div class="resource-label">
+                    <span>Memória RAM</span>
+                    <span id="memory-percent">0%</span>
+                </div>
+                <div class="resource-bar">
+                    <div id="memory-bar" class="resource-fill healthy" style="width: 0%">
+                        <span id="memory-text">0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="resource-details">
+                <div class="resource-detail">
+                    <strong>CPU:</strong> <span id="cpu-cores">0</span> cores
+                </div>
+                <div class="resource-detail">
+                    <strong>RAM:</strong> <span id="memory-info">0/0 GB</span>
+                </div>
+                <div class="resource-detail">
+                    <strong>Processos:</strong> <span id="bot-processes">0</span> bots
+                </div>
+                <div class="resource-detail">
+                    <strong>App:</strong> <span id="app-memory">0</span> MB
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="/admin/bots" class="btn-manage">
+                🤖 Gerenciar Bots
+            </a>
+            <a href="/visualizar" class="btn-view">
+                📊 Visualizar Bots
+            </a>
+        </div>
+    </div>
+    
+    <div class="terminal">
+        <div class="terminal-header">Terminal</div>
+        <div class="terminal-body" id="terminalBody"></div>
+        <div class="terminal-input">
+            <input type="text" id="terminalInput" placeholder="Digite sua mensagem...">
+            <button onclick="sendCommand()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // Atualiza as informações do dashboard a cada 1 segundo
+        function updateDashboard() {
+            fetch('/dashboard-data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('botsActive').innerText = data.botsActive || 0;
+                    document.getElementById('usersCount').innerText = data.usersCount || 0;
+                    document.getElementById('salesCount').innerText = data.salesCount || 0;
+                })
+                .catch(err => console.error('Erro ao atualizar dados do dashboard:', err));
+        }
+
+        // Função para atualizar recursos do sistema
+        function updateSystemResources() {
+            fetch('/api/system/resources')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) return;
+                    
+                    // CPU
+                    const cpuPercent = data.cpu.percent;
+                    document.getElementById('cpu-percent').innerText = cpuPercent + '%';
+                    document.getElementById('cpu-bar').style.width = cpuPercent + '%';
+                    document.getElementById('cpu-text').innerText = cpuPercent + '%';
+                    document.getElementById('cpu-cores').innerText = data.cpu.cores;
+                    
+                    // Memória
+                    const memPercent = data.memory.percent;
+                    document.getElementById('memory-percent').innerText = memPercent + '%';
+                    document.getElementById('memory-bar').style.width = memPercent + '%';
+                    document.getElementById('memory-text').innerText = memPercent + '%';
+                    document.getElementById('memory-info').innerText = 
+                        `${data.memory.used_gb}/${data.memory.total_gb} GB`;
+                    
+                    // Detalhes
+                    document.getElementById('bot-processes').innerText = data.process.bot_processes;
+                    document.getElementById('app-memory').innerText = data.process.memory_mb;
+                    
+                    // Atualiza cores baseado no status
+                    const cpuBar = document.getElementById('cpu-bar');
+                    const memBar = document.getElementById('memory-bar');
+                    
+                    // Remove todas as classes de status
+                    cpuBar.classList.remove('healthy', 'warning', 'critical');
+                    memBar.classList.remove('healthy', 'warning', 'critical');
+                    
+                    // Adiciona classe apropriada
+                    if (cpuPercent > 85) {
+                        cpuBar.classList.add('critical');
+                    } else if (cpuPercent > 70) {
+                        cpuBar.classList.add('warning');
+                    } else {
+                        cpuBar.classList.add('healthy');
+                    }
+                    
+                    if (memPercent > 85) {
+                        memBar.classList.add('critical');
+                    } else if (memPercent > 70) {
+                        memBar.classList.add('warning');
+                    } else {
+                        memBar.classList.add('healthy');
+                    }
+                })
+                .catch(err => console.error('Erro ao atualizar recursos:', err));
+        }
+
+        // Atualiza recursos ao carregar
+        updateSystemResources();
+
+        // Atualiza recursos a cada 5 segundos
+        setInterval(updateSystemResources, 5000);
+
+        setInterval(updateDashboard, 1000); // Atualiza a cada 1 segundo
+
+        // Envia comando via POST e exibe a resposta no terminal
+        function sendCommand() {
+            const input = document.getElementById('terminalInput');
+            const terminalBody = document.getElementById('terminalBody');
+            const command = input.value.trim();
+
+            if (command) {
+                // Exibe o comando no terminal
+                const userMessage = document.createElement('p');
+                userMessage.textContent = '> ' + command;
+                terminalBody.appendChild(userMessage);
+
+                // Envia o comando via POST
+                fetch('/terminal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Exibe a resposta no terminal
+                    const responseMessage = document.createElement('p');
+                    responseMessage.textContent = data.response || 'Nenhuma resposta recebida.';
+                    terminalBody.appendChild(responseMessage);
+
+                    // Rola o terminal para a mensagem mais recente
+                    terminalBody.scrollTop = terminalBody.scrollHeight;
+                })
+                .catch(err => {
+                    const errorMessage = document.createElement('p');
+                    errorMessage.textContent = 'Erro ao enviar comando: ' + err.message;
+                    terminalBody.appendChild(errorMessage);
+                });
+
+                // Limpa o input
+                input.value = '';
+            }
+        }
+        
+        // Permite enviar comando com Enter
+        document.getElementById('terminalInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendCommand();
+            }
+        });
+        
+        // Carrega dados iniciais
+        updateDashboard();
+    </script>
+</body>
+</html>
